@@ -19,7 +19,7 @@ export const makeError = (code: string, message: string, details?: any): ToolRes
 });
 
 // Schemas 
-export const createProfileSchema = z.object({
+export const CreateProfileSchema = z.object({
     name: z.string().min(1, "Name is required").describe("Full name of the user (e.g., Shrey Singhal)"),
     email: z.string().email("Invalid email address").describe("Email address of the user (e.g., shreynbd@gmail.com)"),
     phone: z.string().min(10, "Phone number must be at least 10 digits").describe("Contact phone number (e.g., 8057260114)"),
@@ -42,5 +42,33 @@ export const CreateJobSchema = z.object({
 }).describe("Schema for creating a job posting");
 
 // Infer TypeScript type from schema
-export type CreateProfileInput = z.infer<typeof createProfileSchema>;
+export type CreateProfileInput = z.infer<typeof CreateProfileSchema>;
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
+
+// Matching Options Schema
+export const MatchOptionsSchema = z.object({
+    limit: z.number().min(1).max(100).default(10).describe("Maximum number of matches to return (e.g., 10)").optional(),
+    filters: z.object({
+        location: z.string().optional().describe("Filter by location (e.g., Remote or Noida Sector 90)"),
+        minExperience: z.number().min(0).optional().describe("Minimum years of experience required (e.g., 2)"),
+    }).optional(),
+    matchWeights: z.object({
+        skillMatch: z.number().min(0).max(1).default(0.5).describe("Weight for skills matching (e.g., 0.5)").optional(),
+        experienceMatch: z.number().min(0).max(1).default(0.3).describe("Weight for experience matching (e.g., 0.3)").optional(),
+        location: z.number().min(0).max(1).default(0.2).describe("Weight for location matching (e.g., 0.2)").optional(),
+    }).optional(),
+}).describe("Options for matching profiles or jobs");
+
+// Infer TypeScript type from MatchOptionsSchema
+export type MatchOptions = z.infer<typeof MatchOptionsSchema>;
+
+// Schemas for matching jobs to profiles and profiles to jobs
+export const MatchJobsForProfileSchema = z.object({
+    profileId: z.number().min(1, "Profile ID is required").describe("Unique identifier for the user profile (e.g., 1)"),
+    options: MatchOptionsSchema.optional(),
+}).describe("Schema for matching jobs to a user profile");
+
+export const MatchProfilesForJobSchema = z.object({
+    jobId: z.number().min(1, "Job ID is required").describe("Unique identifier for the job posting (e.g., 1)"),
+    options: MatchOptionsSchema.optional(),
+}).describe("Schema for matching profiles to a job posting");
