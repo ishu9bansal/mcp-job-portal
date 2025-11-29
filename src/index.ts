@@ -1,15 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import {
-    CreateProfileSchema, CreateJobSchema,
-    type CreateProfileInput, type CreateJobInput,
-    makeSuccess, makeError,
-    MatchOptionsSchema, type MatchOptions,
-    ToolResponse,
-    MatchJobsForProfileSchema, MatchProfilesForJobSchema
-} from "./types.js";
-import express from "express";
+import express from 'express';
 
+import { type CreateProfileInput, CreateProfileSchema } from "./types.js";
+import { type CreateJobInput, CreateJobSchema } from "./types.js";
+import { type DeleteProfileInput, DeleteProfileSchema } from "./types.js";
+import { type DeleteJobInput, DeleteJobSchema } from "./types.js";
+import { type MatchJobsForProfileInput, MatchJobsForProfileSchema } from "./types.js";
+import { type MatchProfilesForJobInput, MatchProfilesForJobSchema } from "./types.js";
+import { makeSuccess, makeError } from "./types.js";
+import { type ToolResponse, ToolResponseSchema } from "./types.js";
 
 // Create server instance
 const server = new McpServer({
@@ -48,34 +48,159 @@ async function simulateCreateJob(job: CreateJobInput): Promise<ToolResponse> {
     }
 }
 
+const wrapStructured = (results: ToolResponse) => ({
+    content: [
+        { type: "text", text: JSON.stringify(results) }
+    ],
+    structuredContent: results
+});
+
+const formatList = (uri, results) => ({
+    contents: [
+        {
+            uri: String(uri),
+            text: JSON.stringify({ items: results })
+        }
+    ],
+    structuredContent: { items: results }
+});
+
 // Register createProfile tool
-server.tool(
+server.registerTool(
     "create_profile",
-    "Create a user profile with personal details, skills, and experience.",
-    CreateProfileSchema,
+    {
+        title: "Create Profile Tool",
+        description: "Create a user profile with name, email, experience, skills, and desired job titles.",
+        inputSchema: CreateProfileSchema,
+        outputSchema: ToolResponseSchema
+    },
     async (params: CreateProfileInput, context) => {
         const results = await simulateCreateProfile(params);
-
-        if (!results.success)
-            return makeError("CREATE_PROFILE_FAILED", "Failed to create profile");
-
-        return results;
-    },
+        if (!results.success) {
+            return wrapStructured(makeError("CREATE_PROFILE_FAILED", "Failed to create profile"));
+        }
+        return wrapStructured(results);
+    }
 );
 
 // Register createJob tool
-server.tool(
+server.registerTool(
     "create_job",
-    "Create a job posting with title, company, location, experience, salary, description, and required skills.",
-    CreateJobSchema,
+    {
+        title: "Create Job Tool",
+        description: "Create a job posting with title, company, location, description, and required skills.",
+        inputSchema: CreateJobSchema,
+        outputSchema: ToolResponseSchema
+    },
     async (params: CreateJobInput, context) => {
         const results = await simulateCreateJob(params);
-
-        if (!results.success)
-            return makeError("CREATE_JOB_FAILED", "Failed to create job posting");
-
-        return results;
+        if (!results.success) {
+            return wrapStructured(makeError("CREATE_JOB_FAILED", "Failed to create job posting"));
+        }
+        return wrapStructured(results);
     },
+);
+
+// Delete Profile Tool
+server.registerTool(
+    "delete_profile",
+    {
+        title: "Delete Profile Tool",
+        description: "Delete a user profile by ID.",
+        inputSchema: DeleteProfileSchema,
+        outputSchema: ToolResponseSchema
+    },
+    async (params: DeleteProfileInput, context) => {
+        const index = profiles.findIndex(p => p.id === params.id);
+        if (index === -1)
+            return wrapStructured(makeError("PROFILE_NOT_FOUND", "Profile not found"));
+
+        profiles.splice(index, 1);
+        return wrapStructured(makeSuccess({ message: "Profile deleted successfully" }));
+    }
+);
+
+// Delete Job Tool
+server.registerTool(
+    "delete_job",
+    {
+        title: "Delete Job Tool",
+        description: "Delete a job posting by ID.",
+        inputSchema: DeleteJobSchema,
+        outputSchema: ToolResponseSchema
+    },
+    async (params: DeleteJobInput, context) => {
+        const index = jobs.findIndex(j => j.id === params.id);
+        if (index === -1)
+            return wrapStructured(makeError("JOB_NOT_FOUND", "Job not found"));
+
+        jobs.splice(index, 1);
+        return wrapStructured(makeSuccess({ message: "Job deleted successfully" }));
+    }
+);
+
+// matchJobsForProfile(profileId) Tool => return random 3 jobs from jobs array
+server.registerTool(
+    "match_jobs_for_profile",
+    {
+        title: "Match Jobs for Profile Tool",
+        description: "Match job postings to a user profile based on skills, experience, and location.",
+        inputSchema: MatchJobsForProfileSchema,
+        outputSchema: ToolResponseSchema
+    },
+    async (params: MatchJobsForProfileInput, context) => {
+        const profile = profiles.find(p => p.id === params.profileId);
+        if (!profile)
+            return wrapStructured(makeError("PROFILE_NOT_FOUND", "Profile not found"));
+
+        const jobsShuffled = jobs.sort(() => 0.5 - Math.random()).slice(0, 3);
+        return wrapStructured(makeSuccess({ message: "Matching jobs found", jobs: jobsShuffled }));
+    }
+);
+
+// matchProfilesForJob(jobId, options) Tool
+server.registerTool(
+    "match_profiles_for_job",
+    {
+        title: "Match Profiles for Job Tool",
+        description: "Match user profiles to a job posting based on skills, experience, and location.",
+        inputSchema: MatchProfilesForJobSchema,
+        outputSchema: ToolResponseSchema
+    },
+    async (params: MatchProfilesForJobInput, context) => {
+        const job = jobs.find(j => j.id === params.jobId);
+        if (!job)
+            return wrapStructured(makeError("JOB_NOT_FOUND", "Job not found"));
+
+        const profilesShuffled = profiles.sort(() => 0.5 - Math.random()).slice(0, 3);
+        return wrapStructured(makeSuccess({ message: "Matching profiles found", profiles: profilesShuffled }));
+    }
+);
+
+// List Profiles Resource (static URI: "/profiles")
+server.registerResource(
+    "list_profiles",
+    "list://profiles",
+    {
+        title: "List All Profiles",
+        description: "Returns all profile entries from in-memory database"
+    },
+    async (uri) => {
+        return formatList(uri, profiles);
+    }
+);
+
+// List Jobs Resource (static URI: "/jobs")
+server.registerResource(
+    "list_jobs",
+    "list://jobs",
+    {
+        title: "List All Jobs",
+        description: "Returns an array of all jobs in the system"
+    },
+    async (uri) => {
+        return formatList(uri, jobs);
+    }
 );
 
 // Set up Express and HTTP transport

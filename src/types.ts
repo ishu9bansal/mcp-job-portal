@@ -1,11 +1,20 @@
 import { z } from "zod";
 
-export type ToolResponse = {
-    success: boolean;
-    data: any | null;
-    error: { code: string; message: string; details?: any } | null;
-};
+/* ---------- Standard Tool Response Schema (Zod) ---------- */
+export const ErrorObjectSchema = z.object({
+    code: z.string(),
+    message: z.string(),
+    details: z.any().optional(),
+});
 
+export const ToolResponseSchema = z.object({
+    success: z.boolean(),
+    data: z.any().nullable(),
+    error: ErrorObjectSchema.nullable(),
+});
+export type ToolResponse = z.infer<typeof ToolResponseSchema>;
+
+/* ---------- Helpers ---------- */
 export const makeSuccess = (data: any): ToolResponse => ({
     success: true,
     data,
@@ -18,7 +27,7 @@ export const makeError = (code: string, message: string, details?: any): ToolRes
     error: { code, message, details },
 });
 
-// Schemas 
+/* ---------- Profile & Job Schemas ---------- */
 export const CreateProfileSchema = z.object({
     name: z.string().min(1, "Name is required").describe("Full name of the user (e.g., Shrey Singhal)"),
     email: z.string().email("Invalid email address").describe("Email address of the user (e.g., shreynbd@gmail.com)"),
@@ -28,7 +37,7 @@ export const CreateProfileSchema = z.object({
         company: z.string().min(1, "Company name is required"),
         role: z.string().min(1, "Role is required"),
         duration: z.string().min(1, "Duration is required"),
-    })).describe("List of work experience (e.g., Software Developer at AppSquadz for 1 years)").optional(),
+    })).optional().describe("List of work experience (e.g., Software Developer at AppSquadz for 1 years)"),
 }).describe("Schema for creating a user profile");
 
 export const CreateJobSchema = z.object({
@@ -38,37 +47,36 @@ export const CreateJobSchema = z.object({
     experience: z.string().min(1, "Experience requirement is required").describe("Experience required for the job (e.g., 3+ years)").optional(),
     salary: z.number().min(0, "Salary must be a positive number").describe("Salary for the job (e.g., 100000)").optional(),
     description: z.string().min(10, "Job description must be at least 10 characters").describe("Description of the job (e.g., Responsible for developing backend services)"),
-    skillsRequired: z.array(z.string()).describe("List of skills required for the job (e.g., Node.js, Express)"),
+    skillsRequired: z.array(z.string()).optional().describe("List of skills required for the job (e.g., Node.js, Express)"),
 }).describe("Schema for creating a job posting");
 
 // Infer TypeScript type from schema
 export type CreateProfileInput = z.infer<typeof CreateProfileSchema>;
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 
-// Matching Options Schema
-export const MatchOptionsSchema = z.object({
-    limit: z.number().min(1).max(100).default(10).describe("Maximum number of matches to return (e.g., 10)").optional(),
-    filters: z.object({
-        location: z.string().optional().describe("Filter by location (e.g., Remote or Noida Sector 90)"),
-        minExperience: z.number().min(0).optional().describe("Minimum years of experience required (e.g., 2)"),
-    }).optional(),
-    matchWeights: z.object({
-        skillMatch: z.number().min(0).max(1).default(0.5).describe("Weight for skills matching (e.g., 0.5)").optional(),
-        experienceMatch: z.number().min(0).max(1).default(0.3).describe("Weight for experience matching (e.g., 0.3)").optional(),
-        location: z.number().min(0).max(1).default(0.2).describe("Weight for location matching (e.g., 0.2)").optional(),
-    }).optional(),
-}).describe("Options for matching profiles or jobs");
 
-// Infer TypeScript type from MatchOptionsSchema
-export type MatchOptions = z.infer<typeof MatchOptionsSchema>;
+/* ---------- Delete Profile & Job Schemas ---------- */
+export const DeleteProfileSchema = z.object({
+    id: z.number().min(1, "Profile ID is Required").describe("ID of the profile to delete")
+}).describe("Schema for deleting a user profile");
 
-// Schemas for matching jobs to profiles and profiles to jobs
+export const DeleteJobSchema = z.object({
+    id: z.number().min(1, "Job ID is Required").describe("ID of the job to delete")
+}).describe("Schema for deleting a job posting");
+
+// Infer TypeScript type from schema
+export type DeleteProfileInput = z.infer<typeof DeleteProfileSchema>;
+export type DeleteJobInput = z.infer<typeof DeleteJobSchema>;
+
+/* ---------- Match Schemas ---------- */
 export const MatchJobsForProfileSchema = z.object({
-    profileId: z.number().min(1, "Profile ID is required").describe("Unique identifier for the user profile (e.g., 1)"),
-    options: MatchOptionsSchema.optional(),
+    profileId: z.number().min(1, "Profile ID is required").describe("Unique identifier for the user profile (e.g., 1)")
 }).describe("Schema for matching jobs to a user profile");
 
 export const MatchProfilesForJobSchema = z.object({
-    jobId: z.number().min(1, "Job ID is required").describe("Unique identifier for the job posting (e.g., 1)"),
-    options: MatchOptionsSchema.optional(),
+    jobId: z.number().min(1, "Job ID is required").describe("Unique identifier for the job posting (e.g., 1)")
 }).describe("Schema for matching profiles to a job posting");
+
+// Infer TypeScript type from schema
+export type MatchJobsForProfileInput = z.infer<typeof MatchJobsForProfileSchema>;
+export type MatchProfilesForJobInput = z.infer<typeof MatchProfilesForJobSchema>;
