@@ -167,6 +167,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed instructions.
 - `npm run dev:http` - Run HTTP server in development mode
 - `npm start` - Build and run Stdio server (default)
 - `npm run start:http` - Build and run HTTP server
+- `npx @modelcontextprotocol/inspector node dist/stdio.js` - Test via inspector
 
 ## API Response Format
 
