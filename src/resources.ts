@@ -1,5 +1,4 @@
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { Variables } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import { ResourceTemplateDefinition, formatResourceList, formatSingleResource, formatEmptyResource, filterEntities } from "./interfaces.js";
 import { profiles, jobs } from "./database.js";
 
@@ -100,8 +99,6 @@ export const filterProfileByNameResource: ResourceTemplateDefinition = {
     title: "Filter Candidate Profiles",
     description: "Filter candidate profiles by name. Use profiles://name/john",
     handler: async (uri, variables) => {
-        console.log("Filter Profiles Handler Invoked with variables and uri:", uri, variables);
-
         const searchParams = new URLSearchParams();
         searchParams.set('name', variables?.name as string || '');
         const filtered = filterEntities(profiles, searchParams);
@@ -112,10 +109,10 @@ export const filterProfileByNameResource: ResourceTemplateDefinition = {
 /**
  * Resource Template: Filter Jobs
  */
-export const filterJobsResource: ResourceTemplateDefinition = {
-    name: "filter_jobs",
+export const filterJobsByTitleResource: ResourceTemplateDefinition = {
+    name: "jobs_by_title",
     template: new ResourceTemplate(
-        "jobs://filter{?title,company,location,experienceRequired,salary,description,skillsRequired}",
+        "jobs://title/{title}",
         {
             list: async () => ({
                 resources: jobs.map(j => ({
@@ -128,16 +125,10 @@ export const filterJobsResource: ResourceTemplateDefinition = {
         }
     ),
     title: "Filter Job Postings",
-    description: "Filter job postings by query parameters. Supports: title, company, location, experienceRequired, salary, description, skillsRequired (matches any required skill). Use jobs://filter?location=Remote",
+    description: "Filter job postings by title. Use jobs://title/UI Developer",
     handler: async (uri, variables) => {
         const searchParams = new URLSearchParams();
-        if (variables) {
-            for (const [key, value] of Object.entries(variables)) {
-                const val = Array.isArray(value) ? value[0] : value;
-                searchParams.set(key, val);
-            }
-        }
-        
+        searchParams.set('title', variables?.title as string || '');
         const filtered = filterEntities(jobs, searchParams);
         return formatResourceList(uri, filtered);
     }
@@ -150,5 +141,5 @@ export const allResources: ResourceTemplateDefinition[] = [
     profileByIdResource,
     jobByIdResource,
     filterProfileByNameResource,
-    filterJobsResource,
+    filterJobsByTitleResource,
 ];
