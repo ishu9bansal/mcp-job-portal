@@ -85,3 +85,7 @@ export type MatchProfilesForJobInput = z.infer<typeof MatchProfilesForJobSchema>
 /* ---------- Match Response Types ---------- */
 export type JobMatchResult = CreateJobInput & { id: number; matchScore?: number };
 export type ProfileMatchResult = CreateProfileInput & { id: number; matchScore?: number };
+
+/* ---------- Profile & Job Types ---------- */
+export type Profile = CreateProfileInput & { id: number };
+export type Job = CreateJobInput & { id: number };

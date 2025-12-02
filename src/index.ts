@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
 
-import { type CreateProfileInput, CreateProfileSchema } from "./types.js";
+import { type CreateProfileInput, CreateProfileSchema, Job, Profile } from "./types.js";
 import { type CreateJobInput, CreateJobSchema } from "./types.js";
 import { type DeleteProfileInput, DeleteProfileSchema } from "./types.js";
 import { type DeleteJobInput, DeleteJobSchema } from "./types.js";
@@ -18,8 +18,8 @@ const server = new McpServer({
 });
 
 // Simulated database
-const profiles: (CreateProfileInput & { id: number })[] = [];
-const jobs: (CreateJobInput & { id: number })[] = [];
+const profiles: Profile[] = [];
+const jobs: Job[] = [];
 
 // helper for next id
 function nextId(arr: { id?: number }[]) {
