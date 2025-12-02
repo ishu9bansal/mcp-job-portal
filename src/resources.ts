@@ -1,36 +1,55 @@
-import { ResourceDefinition, formatResourceList } from "./interfaces.js";
+import { ResourceTemplateDefinition, formatResourceList, filterEntities } from "./interfaces.js";
 import { profiles, jobs } from "./database.js";
 
 /**
- * Resource: List All Candidate Profiles
+ * Resource Template: Filter Candidate Profiles
+ * Supports filtering by any profile field using query parameters
+ * Examples:
+ *   profiles://filter?name=John
+ *   profiles://filter?location=Remote
+ *   profiles://filter?skills=JavaScript
+ *   profiles://filter?skills=React&location=Bangalore
  */
-export const listProfilesResource: ResourceDefinition = {
-    name: "list_profiles",
-    uri: "list://profiles",
-    title: "List All Candidate Profiles",
-    description: "Returns all candidate profiles from the platform. Used by candidates to view all their registered profiles or by the system to show available candidates.",
+export const filterProfilesResource: ResourceTemplateDefinition = {
+    name: "filter_profiles",
+    uriTemplate: "profiles://filter{?name,email,phone,location,skills,company,role}",
+    title: "Filter Candidate Profiles",
+    description: "Filter candidate profiles by any field. Supports partial matching for text fields and array fields. Query parameters: name, email, phone, location, skills (matches any skill), company (in experience), role (in experience).",
     handler: async (uri) => {
-        return formatResourceList(uri, profiles);
+        const searchParams = new URL(uri).searchParams;
+        const filtered = filterEntities(profiles, searchParams);
+        
+        return formatResourceList(uri, filtered);
     }
 };
 
 /**
- * Resource: List All Job Postings
+ * Resource Template: Filter Job Postings
+ * Supports filtering by any job field using query parameters
+ * Examples:
+ *   jobs://filter?title=Developer
+ *   jobs://filter?company=Tech
+ *   jobs://filter?location=Remote
+ *   jobs://filter?skillsRequired=JavaScript
+ *   jobs://filter?skillsRequired=React&location=Bangalore
  */
-export const listJobsResource: ResourceDefinition = {
-    name: "list_jobs",
-    uri: "list://jobs",
-    title: "List All Job Postings",
-    description: "Returns all job postings from the platform. Used by job providers to view all their posted jobs or by the system to show available opportunities.",
+export const filterJobsResource: ResourceTemplateDefinition = {
+    name: "filter_jobs",
+    uriTemplate: "jobs://filter{?title,company,location,experienceRequired,salary,description,skillsRequired}",
+    title: "Filter Job Postings",
+    description: "Filter job postings by any field. Supports partial matching for text fields and array fields. Query parameters: title, company, location, experienceRequired, salary, description, skillsRequired (matches any required skill).",
     handler: async (uri) => {
-        return formatResourceList(uri, jobs);
+        const searchParams = new URL(uri).searchParams;
+        const filtered = filterEntities(jobs, searchParams);
+        
+        return formatResourceList(uri, filtered);
     }
 };
 
 /**
- * All resources available in the system
+ * All resource templates available in the system
  */
-export const allResources: ResourceDefinition[] = [
-    listProfilesResource,
-    listJobsResource,
+export const allResources: ResourceTemplateDefinition[] = [
+    filterProfilesResource,
+    filterJobsResource,
 ];

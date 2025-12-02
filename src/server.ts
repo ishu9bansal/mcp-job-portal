@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { ToolDefinition, ResourceDefinition } from "./interfaces.js";
+import { ToolDefinition, ResourceTemplateDefinition } from "./interfaces.js";
 import { allTools } from "./tools.js";
 import { allResources } from "./resources.js";
 
@@ -15,8 +15,8 @@ export function createMcpServer(): McpServer {
     // Register all tools
     registerTools(server, allTools);
 
-    // Register all resources
-    registerResources(server, allResources);
+    // Register all resource templates
+    registerResourceTemplates(server, allResources);
 
     return server;
 }
@@ -40,13 +40,13 @@ function registerTools(server: McpServer, tools: ToolDefinition[]): void {
 }
 
 /**
- * Register resources with the MCP server
+ * Register resource templates with the MCP server
  */
-function registerResources(server: McpServer, resources: ResourceDefinition[]): void {
+function registerResourceTemplates(server: McpServer, resources: ResourceTemplateDefinition[]): void {
     for (const resource of resources) {
         server.registerResource(
             resource.name,
-            resource.uri,
+            resource.uriTemplate,
             {
                 title: resource.title,
                 description: resource.description
