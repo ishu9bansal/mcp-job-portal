@@ -2,6 +2,8 @@ import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplateDefinition, formatResourceList, formatSingleResource, formatEmptyResource, filterEntities } from "./interfaces.js";
 import { profiles, jobs } from "./database.js";
 
+
+// TODO: define a consistent way of defining resource templates and handlers for each field of resource filtering
 /**
  * Resource Template: Profile by ID
  */
