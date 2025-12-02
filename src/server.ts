@@ -1,9 +1,7 @@
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ToolDefinition, ResourceTemplateDefinition } from "./interfaces.js";
 import { allTools } from "./tools.js";
 import { allResources } from "./resources.js";
-import { type Variables } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
-import { profiles } from "./database.js";
 
 /**
  * Create and configure the MCP server
@@ -41,48 +39,6 @@ function registerTools(server: McpServer, tools: ToolDefinition[]): void {
     }
 }
 
-const profileByIdTemplate = new ResourceTemplate(
-    "profiles://{id}",
-    {
-        list: undefined,
-        complete: {
-            id: (value) => {
-                const matchingIds =  profiles.map(p => p.id.toString()).filter(pid => pid.includes(value));
-                return matchingIds;
-            }
-        }
-    },
-);
-
-const profileByIdHandler = async (uri: URL, variables?: Variables) => {
-    const idParam = variables?.id;
-    let stringIds: string[] = [];
-    if (Array.isArray(idParam)) {
-        stringIds = idParam;
-    } else if (typeof idParam === "string") {
-        stringIds = [idParam];
-    }
-    const ids = stringIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
-    const profile = profiles.find(p => ids.includes(p.id));
-    if (!profile) {
-        return {
-            contents: [],
-            structuredContent: { items: [] }
-        };
-    }
-
-    return {
-        contents: [
-            {
-                uri: String(uri),
-                mimeType: "application/json",
-                text: JSON.stringify(profile)
-            }
-        ],
-        structuredContent: profile
-    };
-};
-
 /**
  * Register resource templates with the MCP server
  */
@@ -98,13 +54,4 @@ function registerResourceTemplates(server: McpServer, resources: ResourceTemplat
             resource.handler
         );
     }
-    // server.registerResource(
-    //     "profiles",
-    //     profileByIdTemplate,
-    //     {
-    //         title: "Candidate Profile by ID",
-    //         description: "Retrieve a candidate profile by its unique ID.",
-    //     },
-    //     profileByIdHandler,
-    // )
 }
