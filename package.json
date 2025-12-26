@@ -8,10 +8,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/stdio.js",
-    "start:http": "npm run build && node dist/index.js",
-    "dev": "tsx src/stdio.ts",
-    "dev:http": "tsx src/index.ts",
+    "start:stdio": "npm run build && node dist/stdio.js",
+    "start": "npm run build && node dist/index.js",
+    "dev:stdio": "tsx src/stdio.ts",
+    "dev": "tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
