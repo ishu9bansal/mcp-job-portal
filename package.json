@@ -2,9 +2,9 @@
   "name": "job-portal",
   "version": "1.0.0",
   "type": "module",
-  "main": "dist/stdio.js",
+  "main": "dist/index.js",
   "bin": {
-    "job-portal": "dist/stdio.js"
+    "job-portal": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
