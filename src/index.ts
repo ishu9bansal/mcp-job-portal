@@ -16,6 +16,10 @@ const app = express();
 useAuthMiddleware(app);
 app.use(express.json());
 
+
+app.get('/', (_req, res) => {
+    res.send('Job Portal MCP Server is running. Use the /mcp endpoint for MCP interactions.');
+});
 app.post('/mcp', mcpAuthMiddleware, async (req, res) => {
     // Create a new transport for each request to prevent request ID collisions
     const transport = new StreamableHTTPServerTransport({
