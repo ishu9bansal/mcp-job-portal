@@ -36,7 +36,7 @@ function registerTools(server: McpServer, tools: ToolDefinition[]): void {
                 outputSchema: tool.outputSchema
             },
             async (params, context) => {
-                const user = await userDataFromContext(context);
+                const user = await userDataFromContext(context);    // TODO: invert auth dependency
                 return tool.handler(params, user, context);
             },
         );

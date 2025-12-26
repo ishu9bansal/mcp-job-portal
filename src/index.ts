@@ -20,7 +20,7 @@ app.use(express.json());
 app.get('/', (_req, res) => {
     res.send('Job Portal MCP Server is running. Use the /mcp endpoint for MCP interactions.');
 });
-app.post('/mcp', mcpAuthMiddleware, streamableHttpHandler(server));
+app.post('/mcp', mcpAuthMiddleware, streamableHttpHandler(server)); // TODO: keep auth middleware optional/configurable, invert clerk dependency
 registerWellKnownHandlers(app);
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
